@@ -1,0 +1,40 @@
+# ---- STM32CubeIDE / Eclipse build output ----
+Debug/
+Release/
+*.o
+*.d
+*.su
+*.cyclo
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.a
+
+# ---- Eclipse workspace / machine-local IDE state ----
+.metadata/
+**/.settings/language.settings.xml
+**/.settings/stm32cubeide.project.prefs
+.recommenders/
+*.launch
+RemoteSystemsTempFiles/
+
+# ---- STM32CubeMX ----
+*.ioc.bak
+.mxproject
+
+# ---- OS cruft ----
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+*~
+
