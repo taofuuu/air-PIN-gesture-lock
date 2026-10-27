@@ -24,6 +24,15 @@ RemoteSystemsTempFiles/
 *.ioc.bak
 .mxproject
 
+# ---- ESP32 (PlatformIO / Arduino / ESP-IDF) ----
+.pio/
+build/
+
+# ---- Python / ML ----
+__pycache__/
+.venv/
+.ipynb_checkpoints/
+
 # ---- OS cruft ----
 Thumbs.db
 ehthumbs.db

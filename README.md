@@ -13,6 +13,7 @@ sequence matches the stored PIN the relay energizes the solenoid and the lock op
 | KY-004 push button | Start / confirm PIN entry |
 | KY-019 5V relay module | Switches the solenoid supply |
 | 5V solenoid lock | The lock itself |
+| ESP32 (UART) | Wi-Fi and the web IoT dashboard |
 
 ## Wiring
 
@@ -25,14 +26,19 @@ Pins are fixed in the CubeMX `.ioc`; keep this table in sync with it.
 | KY-004 | S | TBD (GPIO input) |
 | KY-019 | S | TBD (GPIO output) |
 | KY-019 | + / - | 5V / GND |
+| ESP32 | RX / TX / GND | TBD (UART TX / RX, not USART2) / GND |
 
 > Power the solenoid from its own 5V supply through the relay's COM/NO contacts, not from the
 > Nucleo's 5V pin, and put a flyback diode across the solenoid. Share GND with the Nucleo.
 
 ## Project layout
 
-The STM32CubeIDE project lives in this folder. Create it with
-*File → New → STM32 Project*, board **NUCLEO-F411RE**, location set to this repo.
+See [STRUCTURE.md](STRUCTURE.md) for the folders, who owns which part, and the interfaces
+between the parts.
+
+The STM32CubeIDE project lives in `firmware/stm32/`. Create it with
+*File → New → STM32 Project*, board **NUCLEO-F411RE**, untick *Use default location* and
+set the location to `firmware/stm32` in this repo.
 Build output and machine-local IDE files are ignored by `.gitignore`.
 
 ## Build and flash
