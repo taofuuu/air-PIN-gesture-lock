@@ -1,5 +1,5 @@
-// Air PIN gesture wand: 3D-printed handle in two halves (base + lid), a button cap,
-// a decorative shaft and the pin that joins it to the handle.
+// Air PIN gesture wand: a faceted handle in two halves (base + lid), a button cap, a round pommel,
+// a decorative shaft, and two square pins that key the pommel and shaft onto the handle.
 // The GY-521 and KY-004 only sit on printed pegs and are clamped by the lid,
 // so they come back out undamaged. Sizes in mm, from measurements/README.md;
 // values marked ESTIMATE are not measured.
@@ -7,7 +7,7 @@
 
 /* [Output] */
 // Each part comes out in its print orientation; "assembled" is for looking only.
-part = "plate"; // [plate, base, lid, cap, shaft, pin, assembled]
+part = "plate"; // [plate, base, lid, cap, pommel, shaft, pin, assembled]
 
 /* [GY-521 (MPU-6050)] */
 mpu_w = 20.6;          // header edge, lies across the wand
@@ -53,8 +53,16 @@ shaft_tip_d = 8.7;
 ring_at = [39, 80, 114]; // ring centres from the root
 ring_h = 1.7;            // how far a ring stands out
 ring_w = 7;
-joint_d = 7;        // pin joining shaft and handle; a 7 mm dowel or chopstick also works
-socket_depth = 15;  // pin depth in the handle and in the shaft
+joint_d = 7;        // square pins key the pommel and shaft onto the handle
+socket_depth = 15;  // pin depth in each part
+
+/* [Decoration] */
+ct = 4;             // 45-degree facets along the top edges; more would hit the GY-521's corners
+cb = 6;             // 45-degree facets along the bottom edges; more would crowd the hanging jumper wires
+collar_r = 12.5;    // ring where the shaft's flange meets the round shaft
+collar_h = 7;       // flange plus ring at the shaft root
+// Pommel as [distance behind the handle, radius]: a neck, a bulge and a domed end.
+pommel_prof = [[3, 11], [6, 12.5], [10, 12.5], [14, 10.5], [18, 7], [21, 2]];
 
 /* [Print fit] */
 wall = 2.4;
@@ -64,9 +72,8 @@ joint_clr = 0.4;    // pin sockets are this much wider than the pin
 lid_fit = 0.15;     // gap at the lid lip; lower it for a tighter press fit
 lip_h = 2;
 lip_t = 1.0;
-r_out = 4;          // outer edge rounding
 btn_gap = 22;       // room behind the button for its jumper housings to bend down
-exit_w = 10;        // wire exit in the back wall
+exit_w = 10;        // wire exit slot in the floor, just behind the S-bend
 exit_h = 4;
 chicane_gap = 7;    // S-bend passage width
 
@@ -78,7 +85,6 @@ W_in = max(mpu_w, btn_w) + 2 * clr;
 H_in = mpu_under + mpu_t + mpu_parts_h;
 W = W_in + 2 * wall;
 H = H_in + 2 * wall;
-r_in = max(r_out - wall, 0.5);
 
 mpu_x0 = wall + chicane_len;        // header edge of the GY-521
 mpu_bot = wall + mpu_under;
@@ -95,11 +101,13 @@ cap_bot = btn_top + plunger_h;
 px = btn_x0 + switch_x;
 cav_end = btn_x0 + btn_d + 2;
 L = cav_end + socket_depth + wall;
+back_d = socket_depth + 1;          // solid block at the back, above the S-bend, holding the pommel's pin
 
 mpu_pegs = [for (s = [-1, 1]) [mpu_x0 + mpu_d - mpu_hole_front, s * (mpu_w / 2 - mpu_hole_side)]];
 btn_pegs = [for (y = [btn_hole_y, btn_w - btn_hole_y]) [btn_x0 + btn_hole_x, btn_y0 + y]];
 mpu_ledge = W_in / 2 - (mpu_w / 2 - 0.8);  // reaches 0.8 mm under/over the GY-521's side edges
 mpu_ledges_y = [-W_in / 2, W_in / 2 - mpu_ledge];
+facet_in = 2 - sqrt(2);             // the cavity's facets are the outer ones less wall * facet_in
 
 assert(btn_y0 >= -W_in / 2 && btn_y0 + btn_w <= W_in / 2, "KY-004 does not fit with its plunger on the centre line");
 assert(btn_top <= split, "KY-004 would sit above the seam");
@@ -109,16 +117,23 @@ assert(min([for (p = btn_pegs) norm([p[0] - px, p[1]])]) >= (cap_flange_d + btn_
 assert(btn_gap >= housing_l + 3, "btn_gap too small for the KY-004 jumper housings");
 assert(wall - lip_t - lid_fit >= 0.8, "Lid wall too thin at the lip");
 assert(shaft_root_d >= joint_d + joint_clr + 4, "Shaft root too thin around the pin socket");
+assert((W_in - mpu_w) / 2 + (lid_in - mpu_top) >= ct - wall * facet_in, "Top facets would hit the GY-521's corners");
+assert(back_d + 2 <= mpu_x0, "Pommel socket block runs into the GY-521");
 
-module rrect(w, h, r) offset(r = r) square([w - 2 * r, h - 2 * r], center = true);
+// Octagonal outline of the handle, Z from 0 to H.
+module body2d() let(w = W / 2) polygon([[-w + cb, 0], [w - cb, 0], [w, cb], [w, H - ct], [w - ct, H], [-w + ct, H], [-w, H - ct], [-w, cb]]);
 
-// Rounded bar along +X from x0, centred on the handle's axis.
-module bar(x0, len, w, h, r)
-    translate([x0, 0, H / 2]) rotate([90, 0, 90]) linear_extrude(len) rrect(w, h, r);
+module cavity2d(g = 0) offset(delta = g - wall) body2d();
 
-module cavity(g = 0) bar(wall - g, cav_end - wall + 2 * g, W_in + 2 * g, H_in + 2 * g, r_in + g);
+module along_x(x0, len) translate([x0, 0, 0]) rotate([90, 0, 90]) linear_extrude(len) children();
+
+module outer() along_x(0, L) body2d();
+
+module cavity(g = 0) along_x(wall - g, cav_end - wall + 2 * g) cavity2d(g);
 
 module slab(z0, h) translate([-1, -W, z0]) cube([L + 2, 2 * W, h]);
+
+module square_socket(depth) translate([0, -(joint_d + joint_clr) / 2, -(joint_d + joint_clr) / 2]) cube([depth, joint_d + joint_clr, joint_d + joint_clr]);
 
 // Band just outside the cavity at the seam: the base's lip, or (grown by lid_fit) the lid's recess for it.
 module lip_band(t, h) intersection() {
@@ -139,37 +154,53 @@ module presser_tubes(pegs, z, hole_d) for (p = pegs) translate([p[0], p[1], z]) 
 }
 
 module shell() difference() {
-    bar(0, L, W, H, r_out);
+    outer();
     cavity();
-    translate([-1, -exit_w / 2, wall]) cube([wall + 2, exit_w, exit_h]);
-    translate([L - socket_depth, 0, H / 2]) rotate([0, 90, 0]) cylinder(d = joint_d + joint_clr, h = socket_depth + 1);
+    translate([wall + 0.5, -exit_w / 2, -1]) cube([exit_h, exit_w, wall + 2]);
+    translate([-1, 0, H / 2]) square_socket(socket_depth + 1);
+    translate([L - socket_depth, 0, H / 2]) square_socket(socket_depth + 1);
 }
 
 module base() {
     intersection() { shell(); slab(-1, split + 1); }
     lip_band(lip_t, lip_h);
-    // S-bend: the wires weave between two staggered baffles, so a tug on the cable never reaches the connectors
-    translate([wall + 5, -W_in / 2, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
-    translate([wall + 12, -W_in / 2 + chicane_gap, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
-    // GY-521: posts with pegs through its holes, side ledges stopping short of the header strip
-    pegged_posts(mpu_pegs, mpu_bot, mpu_t, mpu_hole_d, 6);
-    for (y = mpu_ledges_y)
-        translate([mpu_x0 + 3.5, y, wall - 0.01]) cube([mpu_d - 3.5, mpu_ledge, mpu_under + 0.01]);
-    // KY-004: rails under its side edges, starting past the header's solder joints, and small pegged posts
-    // under the outer holes; the solder bumps underneath stay clear
-    translate([btn_x0 + 3, -W_in / 2, wall - 0.01]) cube([btn_d - 3, btn_y0 + 1.5 + W_in / 2, shelf_top - wall + 0.01]);
-    translate([btn_x0 + 3, btn_y0 + btn_w - 1.5, wall - 0.01]) cube([btn_d - 3, W_in / 2 - btn_y0 - btn_w + 1.5, shelf_top - wall + 0.01]);
-    pegged_posts(btn_pegs, shelf_top, btn_t, btn_hole_d, btn_hole_d + 1);
+    intersection() {
+        outer();  // keeps the parts below from poking through the bottom facets
+        difference() {
+            union() {
+                // S-bend: the wires weave between two staggered baffles, so a tug on the cable never reaches the connectors
+                translate([wall + 5, -W_in / 2, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
+                translate([wall + 12, -W_in / 2 + chicane_gap, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
+                // block over the S-bend for the pommel's pin; its underside bridges the cavity
+                translate([wall - 0.01, -W_in / 2, wall + 6.6]) cube([back_d - wall, W_in, split - wall - 6.6]);
+                // GY-521: posts with pegs through its holes, side ledges stopping short of the header strip
+                pegged_posts(mpu_pegs, mpu_bot, mpu_t, mpu_hole_d, 6);
+                for (y = mpu_ledges_y)
+                    translate([mpu_x0 + 3.5, y, wall - 0.01]) cube([mpu_d - 3.5, mpu_ledge, mpu_under + 0.01]);
+                // KY-004: rails under its side edges, starting past the header's solder joints, and small pegged posts
+                // under the outer holes; the solder bumps underneath stay clear
+                translate([btn_x0 + 3, -W_in / 2, wall - 0.01]) cube([btn_d - 3, btn_y0 + 1.5 + W_in / 2, shelf_top - wall + 0.01]);
+                translate([btn_x0 + 3, btn_y0 + btn_w - 1.5, wall - 0.01]) cube([btn_d - 3, W_in / 2 - btn_y0 - btn_w + 1.5, shelf_top - wall + 0.01]);
+                pegged_posts(btn_pegs, shelf_top, btn_t, btn_hole_d, btn_hole_d + 1);
+            }
+            translate([-1, 0, H / 2]) square_socket(socket_depth + 1);
+        }
+    }
 }
 
 module lid() difference() {
     union() {
         intersection() { shell(); slab(split, H); }
-        presser_tubes(mpu_pegs, mpu_top, mpu_hole_d);
-        presser_tubes(btn_pegs, btn_top, btn_hole_d);
-        // ribs over the base's side ledges sandwich the GY-521's side edges, so it can't rock about its pegs
-        for (y = mpu_ledges_y)
-            translate([mpu_x0 + 3.5, y, mpu_top]) cube([mpu_d - 3.5, mpu_ledge, lid_in - mpu_top + 0.01]);
+        intersection() {
+            outer();
+            union() {
+                presser_tubes(mpu_pegs, mpu_top, mpu_hole_d);
+                presser_tubes(btn_pegs, btn_top, btn_hole_d);
+                // ribs over the base's side ledges sandwich the GY-521's side edges, so it can't rock about its pegs
+                for (y = mpu_ledges_y)
+                    translate([mpu_x0 + 3.5, y, mpu_top]) cube([mpu_d - 3.5, mpu_ledge, lid_in - mpu_top + 0.01]);
+            }
+        }
     }
     lip_band(lip_t + lid_fit, lip_h + lid_fit);
     translate([px, 0, lid_in - 1]) cylinder(d = cap_d + 0.4, h = wall + 2);
@@ -181,21 +212,41 @@ module lid_print() translate([0, 0, H]) rotate([180, 0, 0]) lid();
 // Flat underside rests on the plunger, so it still works if the switch sits a little off the estimate.
 // Drop it into the lid hole before closing.
 module cap() {
+    cap_h = H + protrude - cap_bot;
     cylinder(d = cap_flange_d, h = cap_flange_t);
-    cylinder(d = cap_d, h = H + protrude - cap_bot);
+    cylinder(d = cap_d, h = cap_h - cap_d / 4);
+    translate([0, 0, cap_h - cap_d / 4]) scale([1, 1, 0.5]) sphere(d = cap_d);  // domed top, like a set stone
 }
+
+// The handle's outline end-on, centred on the wand's axis, for the parts that butt onto its ends.
+// a = 90 for a part turned to face the front, -90 for one facing the back, so its facets line up.
+module end2d(a) rotate(a) translate([0, -H / 2]) body2d();
 
 function ring(z) = max([for (c = ring_at) abs(z - c) < ring_w / 2 ? ring_h * (1 + cos(360 * (z - c) / ring_w)) / 2 : 0]);
 function shaft_r(z) = (shaft_root_d + (shaft_tip_d - shaft_root_d) * z / shaft_len) / 2 + ring(z);
 
-// Stands on its root, so it prints round with no supports; the pin socket is in the root.
+// Stands on its flange: the handle's outline narrows into a ring, then the round shaft.
 module shaft() difference() {
-    rotate_extrude($fn = 64)
-        polygon(concat([[0, 0]], [for (z = [0 : 0.5 : shaft_len]) [shaft_r(z), z]], [[0, shaft_len]]));
-    translate([0, 0, -0.01]) cylinder(d = joint_d + joint_clr, h = socket_depth + 0.01);
+    union() {
+        hull() { linear_extrude(0.01) end2d(90); translate([0, 0, collar_h - 2]) cylinder(r = collar_r, h = 0.01, $fn = 64); }
+        cylinder(r = collar_r, h = collar_h, $fn = 64);
+        rotate_extrude($fn = 64)
+            polygon(concat([[0, 0]], [for (z = [0 : 0.5 : shaft_len]) [shaft_r(z), z]], [[0, shaft_len]]));
+    }
+    translate([0, 0, socket_depth / 2 - 0.01]) cube([joint_d + joint_clr, joint_d + joint_clr, socket_depth], center = true);
 }
 
-module pin() cylinder(d = joint_d, h = 2 * socket_depth - 1);
+// Stands on the face that meets the handle's back: the outline narrows into a neck, bulges and ends in a dome.
+module pommel() difference() {
+    union() {
+        hull() { linear_extrude(0.01) end2d(-90); translate([0, 0, pommel_prof[0][0]]) cylinder(r = pommel_prof[0][1], h = 0.01, $fn = 64); }
+        rotate_extrude($fn = 64)
+            polygon(concat([[0, pommel_prof[0][0]]], [for (p = pommel_prof) [p[1], p[0]]], [[0, pommel_prof[len(pommel_prof) - 1][0]]]));
+    }
+    translate([0, 0, socket_depth / 2 - 0.01]) cube([joint_d + joint_clr, joint_d + joint_clr, socket_depth], center = true);
+}
+
+module pin() translate([-joint_d / 2, -joint_d / 2, 0]) cube([joint_d, joint_d, 2 * socket_depth - 1]);
 
 // Rough stand-ins for the boards and jumper housings, to check the fit by eye.
 module ghosts() {
@@ -210,14 +261,18 @@ module ghosts() {
 if (part == "plate") {  // everything but the tall shaft, laid out for one print
     base();
     translate([0, W + 10, 0]) lid_print();
-    translate([L + 10, 0, 0]) cap();
-    translate([L + 10, W + 10, 0]) pin();
+    translate([L + 20, 0, 0]) pommel();
+    translate([L + 20, W + 15, 0]) cap();
+    translate([L + 45, -5, 0]) pin();
+    translate([L + 45, 10, 0]) pin();
 } else if (part == "base") {
     base();
 } else if (part == "lid") {
     lid_print();
 } else if (part == "cap") {
     cap();
+} else if (part == "pommel") {
+    pommel();
 } else if (part == "shaft") {
     shaft();
 } else if (part == "pin") {
@@ -226,7 +281,7 @@ if (part == "plate") {  // everything but the tall shaft, laid out for one print
     base();
     %lid();
     translate([px, 0, cap_bot]) cap();
-    translate([L - socket_depth + 0.5, 0, H / 2]) rotate([0, 90, 0]) pin();
+    translate([0, 0, H / 2]) rotate([0, -90, 0]) pommel();
     translate([L, 0, H / 2]) rotate([0, 90, 0]) shaft();
     color("red") ghosts();
 }
