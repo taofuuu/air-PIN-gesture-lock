@@ -79,7 +79,7 @@ chicane_gap = 7;    // S-bend passage width
 
 /* [Hidden] */
 $fn = 48;
-chicane_len = 18;
+chicane_len = 30;                   // room past the pommel block for the exit slot and both baffles
 mpu_under = mpu_strip_h + housing_l + wire_bend;
 W_in = max(mpu_w, btn_w) + 2 * clr;
 H_in = mpu_under + mpu_t + mpu_parts_h;
@@ -101,7 +101,10 @@ cap_bot = btn_top + plunger_h;
 px = btn_x0 + switch_x;
 cav_end = btn_x0 + btn_d + 2;
 L = cav_end + socket_depth + wall;
-back_d = socket_depth + 1;          // solid block at the back, above the S-bend, holding the pommel's pin
+back_d = socket_depth + 1;          // solid block at the back holding the pommel's pin
+exit_x = back_d + 1;                // exit slot and both baffles stand clear of the block, so nothing
+chicane_x = [exit_x + exit_h + 1, exit_x + exit_h + 8];  // on the wire run is roofed over
+lip_left = W / 2 + H - ct - (wall - lip_t) * sqrt(2) - split - W_in / 2;  // lip height left over the GY-521
 
 mpu_pegs = [for (s = [-1, 1]) [mpu_x0 + mpu_d - mpu_hole_front, s * (mpu_w / 2 - mpu_hole_side)]];
 btn_pegs = [for (y = [btn_hole_y, btn_w - btn_hole_y]) [btn_x0 + btn_hole_x, btn_y0 + y]];
@@ -118,7 +121,8 @@ assert(btn_gap >= housing_l + 3, "btn_gap too small for the KY-004 jumper housin
 assert(wall - lip_t - lid_fit >= 0.8, "Lid wall too thin at the lip");
 assert(shaft_root_d >= joint_d + joint_clr + 4, "Shaft root too thin around the pin socket");
 assert((W_in - mpu_w) / 2 + (lid_in - mpu_top) >= ct - wall * facet_in, "Top facets would hit the GY-521's corners");
-assert(back_d + 2 <= mpu_x0, "Pommel socket block runs into the GY-521");
+assert(chicane_x[1] + 2 <= mpu_x0, "Wire run does not fit before the GY-521: raise chicane_len");
+assert(lip_left >= 0.8, "Lip relief over the GY-521 leaves too little lip: lower ct or raise mpu_parts_h");
 
 // Octagonal outline of the handle, Z from 0 to H.
 module body2d() let(w = W / 2) polygon([[-w + cb, 0], [w - cb, 0], [w, cb], [w, H - ct], [w - ct, H], [-w + ct, H], [-w, H - ct], [-w, cb]]);
@@ -136,8 +140,14 @@ module slab(z0, h) translate([-1, -W, z0]) cube([L + 2, 2 * W, h]);
 module square_socket(depth) translate([0, -(joint_d + joint_clr) / 2, -(joint_d + joint_clr) / 2]) cube([depth, joint_d + joint_clr, joint_d + joint_clr]);
 
 // Band just outside the cavity at the seam: the base's lip, or (grown by lid_fit) the lid's recess for it.
+// Over the GY-521 the band is cut back to a vertical face, because the top facets it otherwise follows
+// lean in far enough to pinch the board's drop-in path; elsewhere the lip keeps its full section.
 module lip_band(t, h) intersection() {
-    difference() { cavity(t); cavity(); }
+    difference() {
+        cavity(t);
+        cavity();
+        translate([mpu_x0 - 1, -W_in / 2, split]) cube([mpu_d + 2, W_in, h + 2]);
+    }
     slab(split - 0.01, h + 0.01);
 }
 
@@ -156,7 +166,7 @@ module presser_tubes(pegs, z, hole_d) for (p = pegs) translate([p[0], p[1], z]) 
 module shell() difference() {
     outer();
     cavity();
-    translate([wall + 0.5, -exit_w / 2, -1]) cube([exit_h, exit_w, wall + 2]);
+    translate([exit_x, -exit_w / 2, -1]) cube([exit_h, exit_w, wall + 2]);
     translate([-1, 0, H / 2]) square_socket(socket_depth + 1);
     translate([L - socket_depth, 0, H / 2]) square_socket(socket_depth + 1);
 }
@@ -168,11 +178,13 @@ module base() {
         outer();  // keeps the parts below from poking through the bottom facets
         difference() {
             union() {
-                // S-bend: the wires weave between two staggered baffles, so a tug on the cable never reaches the connectors
-                translate([wall + 5, -W_in / 2, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
-                translate([wall + 12, -W_in / 2 + chicane_gap, wall - 0.01]) cube([2, W_in - chicane_gap, 6]);
-                // block over the S-bend for the pommel's pin; its underside bridges the cavity
-                translate([wall - 0.01, -W_in / 2, wall + 6.6]) cube([back_d - wall, W_in, split - wall - 6.6]);
+                // S-bend: the wires weave between two staggered baffles, so a tug on the cable never reaches the
+                // connectors. Both stand past the pommel block and reach the seam, so the wires are laid in from
+                // above with the boards out, and the lid traps them.
+                translate([chicane_x[0], -W_in / 2, wall - 0.01]) cube([2, W_in - chicane_gap, split - wall + 0.01]);
+                translate([chicane_x[1], -W_in / 2 + chicane_gap, wall - 0.01]) cube([2, W_in - chicane_gap, split - wall + 0.01]);
+                // the pommel's pin socket sits in a solid block; the wires pass in front of it, not under it
+                translate([wall - 0.01, -W_in / 2, wall - 0.01]) cube([back_d - wall, W_in, split - wall + 0.01]);
                 // GY-521: posts with pegs through its holes, side ledges stopping short of the header strip
                 pegged_posts(mpu_pegs, mpu_bot, mpu_t, mpu_hole_d, 6);
                 for (y = mpu_ledges_y)
