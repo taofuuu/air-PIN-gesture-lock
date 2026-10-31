@@ -18,12 +18,14 @@ sequence matches the stored PIN the relay energizes the solenoid and the lock op
 ## Wiring
 
 Pins are fixed in the CubeMX `.ioc`; keep this table in sync with it.
+[hardware/wiring.svg](hardware/wiring.svg) draws the sensor and button wiring.
 
 | Part | Pin | Nucleo pin |
 |------|-----|------------|
-| MPU-6050 | SDA / SCL | TBD (I2C) |
+| MPU-6050 | SDA / SCL | D14 (PB9) / D15 (PB8), I2C1 |
 | MPU-6050 | VCC / GND | 3V3 / GND |
-| KY-004 | S | TBD (GPIO input) |
+| KY-004 | S | D4 (PB5), GPIO input with pull-up |
+| KY-004 | + (middle pin) / - | 3V3 / GND |
 | KY-019 | S | TBD (GPIO output) |
 | KY-019 | + / - | 5V / GND |
 | ESP32 | RX / TX / GND | TBD (UART TX / RX, not USART2) / GND |
