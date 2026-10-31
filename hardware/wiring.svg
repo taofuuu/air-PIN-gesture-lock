@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 680" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#1f2328">
+  <title>Data-collection wiring: GY-521 and KY-004 to the NUCLEO-F411RE</title>
+  <rect width="940" height="680" fill="#ffffff"/>
+
+  <text x="24" y="38" font-size="20" font-weight="600">Data-collection wiring</text>
+  <text x="24" y="60" fill="#57606a">GY-521 (MPU-6050) and KY-004 button in the wand, wired to the NUCLEO-F411RE</text>
+
+  <!-- PC -->
+  <rect x="24" y="240" width="150" height="80" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"/>
+  <text x="99" y="273" text-anchor="middle" font-weight="600">PC</text>
+  <text x="99" y="294" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="12">ml/collect.py</text>
+  <path d="M174 280 H252" stroke="#8c959f" stroke-width="4" fill="none"/>
+  <text x="24" y="346" font-size="12" fill="#57606a">USB to the ST-LINK port</text>
+  <text x="24" y="363" font-size="12" fill="#57606a">(USART2, 115200 baud)</text>
+
+  <!-- Nucleo -->
+  <rect x="260" y="90" width="250" height="430" rx="10" fill="#f6f8fa" stroke="#1f2328" stroke-width="1.5"/>
+  <rect x="252" y="272" width="8" height="16" fill="#8c959f"/>
+  <text x="385" y="122" text-anchor="middle" font-size="16" font-weight="600">NUCLEO-F411RE</text>
+  <text x="385" y="142" text-anchor="middle" font-size="12" fill="#57606a">Arduino headers</text>
+  <g text-anchor="end">
+    <text x="496" y="235"><tspan font-size="11" fill="#57606a">PB9 · CN5  </tspan>SDA / D14</text>
+    <text x="496" y="275"><tspan font-size="11" fill="#57606a">PB8 · CN5  </tspan>SCL / D15</text>
+    <text x="496" y="315"><tspan font-size="11" fill="#57606a">CN6  </tspan>GND</text>
+    <text x="496" y="355"><tspan font-size="11" fill="#57606a">CN6  </tspan>3V3</text>
+    <text x="496" y="415"><tspan font-size="11" fill="#57606a">PB5 · CN9 · input, pull-up  </tspan>D4</text>
+    <text x="496" y="495"><tspan font-size="11" fill="#57606a">CN5, next to D13  </tspan>GND</text>
+  </g>
+  <g fill="#1f2328">
+    <rect x="506" y="226" width="8" height="8"/>
+    <rect x="506" y="266" width="8" height="8"/>
+    <rect x="506" y="306" width="8" height="8"/>
+    <rect x="506" y="346" width="8" height="8"/>
+    <rect x="506" y="406" width="8" height="8"/>
+    <rect x="506" y="486" width="8" height="8"/>
+  </g>
+
+  <!-- Wand -->
+  <rect x="620" y="40" width="300" height="490" rx="14" fill="none" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="636" y="64" font-style="italic" fill="#57606a">Wand handle</text>
+
+  <!-- GY-521, header drawn top to bottom from INT to VCC -->
+  <rect x="670" y="80" width="230" height="296" rx="8" fill="#f6f8fa" stroke="#1f2328" stroke-width="1.5"/>
+  <text x="815" y="112" text-anchor="middle" font-weight="600">GY-521</text>
+  <text x="815" y="130" text-anchor="middle" font-size="12" fill="#57606a">MPU-6050</text>
+  <g fill="#8c959f">
+    <text x="682" y="115">INT</text>
+    <text x="682" y="145">AD0</text>
+    <text x="682" y="175">XCL</text>
+    <text x="682" y="205">XDA</text>
+    <text x="730" y="160" font-size="12">not connected</text>
+    <rect x="666" y="106" width="8" height="8"/>
+    <rect x="666" y="136" width="8" height="8"/>
+    <rect x="666" y="166" width="8" height="8"/>
+    <rect x="666" y="196" width="8" height="8"/>
+  </g>
+  <text x="682" y="235">SDA</text>
+  <text x="682" y="275">SCL</text>
+  <text x="682" y="315">GND</text>
+  <text x="682" y="355">VCC</text>
+  <g fill="#1f2328">
+    <rect x="666" y="226" width="8" height="8"/>
+    <rect x="666" y="266" width="8" height="8"/>
+    <rect x="666" y="306" width="8" height="8"/>
+    <rect x="666" y="346" width="8" height="8"/>
+  </g>
+
+  <!-- KY-004, pins in board order S, +, - -->
+  <rect x="670" y="394" width="230" height="116" rx="8" fill="#f6f8fa" stroke="#1f2328" stroke-width="1.5"/>
+  <text x="815" y="444" text-anchor="middle" font-weight="600">KY-004</text>
+  <text x="815" y="462" text-anchor="middle" font-size="12" fill="#57606a">push button</text>
+  <text x="682" y="415">S</text>
+  <text x="682" y="455">+ <tspan font-size="11" fill="#57606a">(middle pin)</tspan></text>
+  <text x="682" y="495">−</text>
+  <g fill="#1f2328">
+    <rect x="666" y="406" width="8" height="8"/>
+    <rect x="666" y="446" width="8" height="8"/>
+    <rect x="666" y="486" width="8" height="8"/>
+  </g>
+
+  <!-- Wires -->
+  <g fill="none" stroke-width="3" stroke-linecap="round">
+    <path d="M514 230 H666" stroke="#0969da"/>
+    <path d="M514 270 H666" stroke="#bf8700"/>
+    <path d="M514 310 H666" stroke="#1f2328"/>
+    <path d="M514 350 H666" stroke="#cf222e"/>
+    <path d="M590 350 V402 A8 8 0 0 1 590 418 V450 H666" stroke="#cf222e"/>
+    <path d="M514 410 H666" stroke="#1a7f37"/>
+    <path d="M514 490 H666" stroke="#1f2328"/>
+  </g>
+  <circle cx="590" cy="350" r="5" fill="#cf222e"/>
+
+  <!-- Legend -->
+  <g font-size="12">
+    <path d="M24 566 H52" stroke="#cf222e" stroke-width="3"/>
+    <text x="60" y="570">3V3</text>
+    <path d="M124 566 H152" stroke="#1f2328" stroke-width="3"/>
+    <text x="160" y="570">GND</text>
+    <path d="M226 566 H254" stroke="#0969da" stroke-width="3"/>
+    <text x="262" y="570">SDA</text>
+    <path d="M326 566 H354" stroke="#bf8700" stroke-width="3"/>
+    <text x="362" y="570">SCL</text>
+    <path d="M426 566 H454" stroke="#1a7f37" stroke-width="3"/>
+    <text x="462" y="570">Button signal</text>
+  </g>
+
+  <!-- Notes -->
+  <g font-size="12.5" fill="#57606a">
+    <text x="24" y="604">A dot joins wires. A hop is a crossing, not a connection.</text>
+    <text x="24" y="625">Power both modules from 3V3, not 5V. Every GND pin on the Nucleo is the same ground.</text>
+    <text x="24" y="646">AD0 left open puts the MPU-6050 at I2C address 0x68, so the firmware prints WHO_AM_I = 0x68.</text>
+    <text x="24" y="667">KY-004 boards differ on whether pressed reads high or low: watch the btn column in the live stream.</text>
+  </g>
+</svg>

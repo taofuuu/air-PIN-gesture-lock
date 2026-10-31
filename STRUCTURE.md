@@ -16,8 +16,11 @@ all three agree.
 air-PIN-gesture-lock/
 ├── README.md                 overview, wiring, how to build and flash
 ├── STRUCTURE.md              this file
+├── GLOSSARY.md               the words we use for the domain
+├── docs/adr/                 decisions that are hard to undo, and why
 ├── hardware/
-│   └── wand.scad             3D-printed wand handle
+│   ├── wand.scad             3D-printed wand handle
+│   └── wiring.svg            how the sensor and button connect to the Nucleo
 ├── firmware/
 │   ├── stm32/                STM32CubeIDE project, NUCLEO-F411RE          shared
 │   │   ├── *.ioc             CubeMX pins and peripherals                 shared
@@ -33,8 +36,12 @@ air-PIN-gesture-lock/
 │       └── data/             dashboard HTML/CSS/JS served by the ESP32   ESP32
 └── ml/                       training on the PC                          ML
     ├── collect.py            records labelled gestures from the Nucleo's USB serial
+    ├── dataset.py            loads ml/data/ as raw recordings for training
+    ├── test_pipeline.py      python -m unittest discover ml
+    ├── requirements.txt      pip install -r ml/requirements.txt
     ├── train.py              trains, evaluates and exports the model
-    ├── data/                 recorded gestures, one CSV per recording
+    ├── data/                 one folder per gesture, one CSV per recording;
+    │                         folders starting with _ are for evaluation only
     └── model/                exported model that gesture.c is generated from
 ```
 
@@ -62,6 +69,11 @@ int gesture_classify(const imu_sample_t *samples, size_t n);  // gesture_t, or -
 
 One button hold = one gesture: recording starts when the button is pressed and stops when it
 is released. That saves the model from having to find where one gesture ends and the next begins.
+
+A gesture ID is a plain int: PIN mapping and the dashboard store and compare it, and never assume
+how many gestures there are or which ID is which. `-1` means unsure and every caller handles it.
+These two rules let the model be swapped without touching the other parts
+([ADR 0001](docs/adr/0001-classifier-first-embedding-later.md)).
 
 **3. PIN mapping to main** (`pin.h`)
 
