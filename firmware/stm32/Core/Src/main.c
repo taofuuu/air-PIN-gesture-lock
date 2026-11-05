@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "gesture.h"
 #include "imu.h"
 /* USER CODE END Includes */
 
@@ -33,6 +34,12 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define SAMPLE_PERIOD_MS 10  // 100 Hz, matches the MPU-6050 sample rate set in imu.c
+
+/* Gesture test mockup (branch ml-gesture-fw), not for merging: the real firmware is Chin's.
+ * Hold the KY-004, make a gesture and release; prints the gesture ID and how long it took. */
+#define BTN_GPIO_Port GPIOB
+#define BTN_Pin       GPIO_PIN_5      // D4
+#define BTN_PRESSED   GPIO_PIN_RESET  // same as the collection firmware
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,7 +53,8 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+static imu_sample_t recording[GESTURE_MODEL_SAMPLES];
+static size_t recorded;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,9 +123,18 @@ int main(void)
     if ((int32_t)(HAL_GetTick() - next_sample) >= 0)
     {
       next_sample += SAMPLE_PERIOD_MS;
-      if (imu_read(&s) == 0)
+      int held = HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == BTN_PRESSED;
+      if (imu_read(&s) == 0 && held && recorded < GESTURE_MODEL_SAMPLES)
       {
-        printf("%d,%d,%d,%d,%d,%d\r\n", s.ax, s.ay, s.az, s.gx, s.gy, s.gz);
+        recording[recorded++] = s;
+      }
+      if (!held && recorded > 0)
+      {
+        uint32_t start = HAL_GetTick();
+        int gesture = gesture_classify(recording, recorded);
+        printf("gesture %d, %u samples, %lu ms\r\n", gesture, (unsigned)recorded, (unsigned long)(HAL_GetTick() - start));
+        recorded = 0;
+        next_sample = HAL_GetTick();  // don't rush to catch up on samples missed while classifying
       }
     }
   }
@@ -272,7 +289,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-
+  // KY-004 S on D4. Set up here, not in the .ioc, because this firmware is a test mockup.
+  GPIO_InitStruct.Pin = BTN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BTN_GPIO_Port, &GPIO_InitStruct);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
