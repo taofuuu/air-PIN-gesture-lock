@@ -65,6 +65,12 @@ each pixel onto the board. The fit puts the measured outer hole at 13.01 / 1.36 
 tenths of a millimetre. Switch centre: **9.7 from the pin edge, 7.2 from the right edge**. The
 button cap has a flat bottom, so it still meets the plunger if this is off by up to ~2.
 
+## Sensor axes in the wand
+
+In the starting pose with the button on top, the accelerometer's **z axis reads about +8192
+(+1 g)**, and x runs along the wand. The lead-ins of 176 strokes average x 1534, y -952, z 8357;
+x and y aren't zero because the grip tilts the wand a little.
+
 ## Still estimated in the model
 
 - GY-521 tallest part on top of the board (`mpu_parts_h`, 2.5 is on the safe side).
