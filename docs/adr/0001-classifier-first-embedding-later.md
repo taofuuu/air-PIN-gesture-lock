@@ -1,5 +1,5 @@
 ---
-Status: proposed (needs the PIN-mapping and ESP32 owners to agree)
+Status: accepted
 ---
 
 # Classifier first, embedding + templates later
