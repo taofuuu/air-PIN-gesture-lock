@@ -24,7 +24,9 @@ air-PIN-gesture-lock/
 ├── firmware/
 │   ├── stm32/                STM32CubeIDE project, NUCLEO-F411RE          shared
 │   │   ├── *.ioc             CubeMX pins and peripherals                 shared
+│   │   ├── test/             gesture.c on a PC, with a fake network      ML
 │   │   └── Core/
+│   │       ├── AI/           network code generated from ml/model/       ML
 │   │       ├── Inc/          one header per module = the interfaces below
 │   │       └── Src/
 │   │           ├── main.c    init, button, relay, calls the modules      shared
@@ -46,7 +48,7 @@ air-PIN-gesture-lock/
 ```
 
 The model runs on the STM32 because the sensor is wired there. Code generated from
-`ml/model/` (X-CUBE-AI or TensorFlow Lite Micro) goes into `firmware/stm32/` and is
+`ml/model/` (X-CUBE-AI) goes into `firmware/stm32/Core/AI/` and is
 regenerated, never edited by hand.
 
 ## Interfaces

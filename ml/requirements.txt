@@ -1,2 +1,4 @@
 pyserial>=3.5
 numpy>=1.26
+torch>=2.4
+onnx>=1.17
