@@ -11,6 +11,7 @@ Release/
 *.map
 *.list
 *.a
+!firmware/stm32/Core/AI/Lib/*.a
 
 # ---- Eclipse workspace / machine-local IDE state ----
 .metadata/
