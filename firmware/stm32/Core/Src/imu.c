@@ -4,6 +4,8 @@ extern I2C_HandleTypeDef hi2c1;
 
 #define MPU_ADDR         (0x68 << 1)  // HAL takes the 7-bit address shifted left; AD0 low
 #define I2C_TIMEOUT_MS   100
+#define I2C_SCL_PIN      GPIO_PIN_8   // PB8
+#define I2C_SDA_PIN      GPIO_PIN_9   // PB9
 
 #define REG_SMPLRT_DIV   0x19
 #define REG_CONFIG       0x1A
@@ -18,9 +20,47 @@ static void write_reg(uint8_t reg, uint8_t value)
   HAL_I2C_Mem_Write(&hi2c1, MPU_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MS);
 }
 
+static void bus_line(uint16_t pin, GPIO_PinState level)
+{
+  HAL_GPIO_WritePin(GPIOB, pin, level);
+  HAL_Delay(1);
+}
+
+// A chip reset during a read leaves the sensor waiting to send the rest of its byte. A 0 bit
+// holds SDA low until a power cycle; a 1 bit looks like an idle bus, and the next transfer
+// collides with it. SDA can't tell these apart, so always finish the read by hand.
+static void i2c_bus_recover(void)
+{
+  HAL_I2C_DeInit(&hi2c1);
+  HAL_GPIO_WritePin(GPIOB, I2C_SCL_PIN | I2C_SDA_PIN, GPIO_PIN_SET);
+  GPIO_InitTypeDef pins = {.Pin = I2C_SCL_PIN | I2C_SDA_PIN, .Mode = GPIO_MODE_OUTPUT_OD};
+  HAL_GPIO_Init(GPIOB, &pins);
+
+  // 9 clocks with SDA released always cross one ACK slot, and no ACK there ends a read. A STOP
+  // fails if its own clock lands on the sensor's ACK to a write, but ACK slots are 9 clocks
+  // apart and these rounds are 10, so the two STOPs can't both fail.
+  for (int round = 0; round < 2; round++)
+  {
+    for (int i = 0; i < 9; i++)
+    {
+      bus_line(I2C_SCL_PIN, GPIO_PIN_RESET);
+      bus_line(I2C_SCL_PIN, GPIO_PIN_SET);
+    }
+
+    // STOP: SDA rises while SCL is high
+    bus_line(I2C_SCL_PIN, GPIO_PIN_RESET);
+    bus_line(I2C_SDA_PIN, GPIO_PIN_RESET);
+    bus_line(I2C_SCL_PIN, GPIO_PIN_SET);
+    bus_line(I2C_SDA_PIN, GPIO_PIN_SET);
+  }
+
+  HAL_I2C_Init(&hi2c1);
+}
+
 uint8_t imu_init(void)
 {
   uint8_t id = 0;
+  i2c_bus_recover();
   HAL_I2C_Mem_Read(&hi2c1, MPU_ADDR, REG_WHO_AM_I, I2C_MEMADD_SIZE_8BIT, &id, 1, I2C_TIMEOUT_MS);
 
   write_reg(REG_PWR_MGMT_1, 0x01);    // clear SLEEP (set at power-up), clock from gyro X PLL
