@@ -32,7 +32,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLE_PERIOD_MS 10  // 100 Hz, matches the MPU-6050 sample rate set in imu.c
+// shortcut: this 10 ms loop runs off the STM32 clock, the MPU-6050's 100 Hz off its own
+// oscillator. They drift ~1%, so about 1 row in 70 repeats the previous sample (1.41% in the
+// recorded ml/data). Fine for the classifier; switch to the data-ready flag if anyone
+// integrates the gyro.
+#define SAMPLE_PERIOD_MS 10
+#define MAX_READ_FAILS   10  // consecutive failed reads before re-running imu_init()
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -77,6 +82,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t next_sample;
   imu_sample_t s;
+  int read_fails = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -118,6 +124,15 @@ int main(void)
       if (imu_read(&s) == 0)
       {
         printf("%d,%d,%d,%d,%d,%d\r\n", s.ax, s.ay, s.az, s.gx, s.gy, s.gz);
+        read_fails = 0;
+      }
+      else if (++read_fails >= MAX_READ_FAILS)
+      {
+        // The bus can stick at runtime too (a jumper pops out and back). imu_init() frees it
+        // and reapplies the settings. collect.py drops non-numeric lines, so these are safe.
+        read_fails = 0;
+        printf("imu reset, WHO_AM_I = 0x%02X\r\n", imu_init());
+        next_sample = HAL_GetTick();  // recovery takes ~50-90 ms; don't burst to catch up
       }
     }
   }

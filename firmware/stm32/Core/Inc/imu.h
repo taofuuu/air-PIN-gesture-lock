@@ -11,7 +11,7 @@
 typedef struct { int16_t ax, ay, az, gx, gy, gz; } imu_sample_t;  // raw MPU-6050 counts
 
 /* Wakes the chip and applies the settings above. Returns WHO_AM_I: 0x68 on a genuine
- * MPU-6050, 0x00 if nothing answered on the bus. */
+ * MPU-6050, 0x00 if nothing answered on the bus or any setting failed to write. */
 uint8_t imu_init(void);
 
 /* Reads one sample. Returns 0 on success, -1 if the I2C transfer failed. */
