@@ -5,7 +5,7 @@
 #define GESTURE_MODEL_SAMPLES 200
 #define GESTURE_MODEL_RATE_HZ 100
 #define GESTURE_MODEL_GRAVITY_SAMPLES 5
-#define GESTURE_MODEL_THRESHOLD 0.989207f  // below this, gesture_classify() returns -1
+#define GESTURE_MODEL_THRESHOLD 0.750751f  // below this, gesture_classify() returns -1
 #define GESTURE_MODEL_MIN_TURN 15.0f
 #define GESTURE_MODEL_MIN_STRAIGHTNESS 0.5f
 // Outputs in order: up, down, left, right
