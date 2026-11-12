@@ -85,6 +85,10 @@ void pin_reset(void);
 pin_result_t pin_add(int gesture);  // main energises the relay on PIN_OK
 ```
 
+A `-1` from `gesture_classify()` is never stored in a PIN and never fills a slot; on entry it is
+neither a digit nor a wrong digit, and the user is asked to repeat
+([ADR 0002](docs/adr/0002-unsure-gestures-are-never-pin-input.md)).
+
 **4. STM32 to ESP32** (`link.h`, UART 115200 8N1, one text line per message)
 
 ```
