@@ -6,9 +6,9 @@ all three agree.
 
 | Part | Owner | Branch |
 |------|-------|--------|
-| ML gesture model | taofuuu | `ml-model` |
-| PIN mapping | TBD | `pin-mapping` |
-| ESP32 + web IoT dashboard | TBD | `esp32-dashboard` |
+| ML gesture model | taofuuu | `ml-model`, merged to `main` |
+| PIN mapping | TBD | `gesture-pin-entry` |
+| ESP32 + web IoT dashboard | TBD | `esp32-dashboard`, not started |
 
 ## Layout
 
@@ -103,6 +103,8 @@ ESP32 uses another UART. Both boards are 3.3 V logic; connect TX to RX, RX to TX
 ## Working rules
 
 - Work on your own branch and merge to `main` through a pull request.
+- `ml-collect-fw` and `ml-gesture-fw` are mockup firmware for testing one part on its own.
+  Rebase them onto `main` when it moves; they are never merged into it.
 - Edit only your own files. Shared files (`main.c`, `imu.c`, `*.ioc`, headers in `Inc/`)
   change in small PRs that the others review.
 - In CubeMX-generated files, write code only between `/* USER CODE BEGIN */` and
