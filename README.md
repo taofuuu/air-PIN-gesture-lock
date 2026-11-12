@@ -26,7 +26,7 @@ Pins are fixed in the CubeMX `.ioc`; keep this table in sync with it.
 | MPU-6050 | VCC / GND | 3V3 / GND |
 | KY-004 | S | D4 (PB5), GPIO input with pull-up, low while pressed |
 | KY-004 | + (middle pin) / - | 3V3 / GND |
-| KY-019 | S | TBD (GPIO output) |
+| KY-019 | S | D7 (PA8), GPIO output; only the HwTest firmware sets it up so far, not the `.ioc` |
 | KY-019 | + / - | 5V / GND |
 | ESP32 | RX / TX / GND | TBD (UART TX / RX, not USART2) / GND |
 
@@ -38,12 +38,23 @@ Pins are fixed in the CubeMX `.ioc`; keep this table in sync with it.
 See [STRUCTURE.md](STRUCTURE.md) for the folders, who owns which part, and the interfaces
 between the parts.
 
-The STM32CubeIDE project lives in `firmware/stm32/`. Create it with
-*File → New → STM32 Project*, board **NUCLEO-F411RE**, untick *Use default location* and
-set the location to `firmware/stm32` in this repo.
+The STM32CubeIDE project lives in `firmware/stm32/`. Open it with
+*File → Import → General → Existing Projects into Workspace* and pick `firmware/stm32` in this
+repo, leaving *Copy projects into workspace* unticked.
 Build output and machine-local IDE files are ignored by `.gitignore`.
 
 ## Build and flash
 
-Open the project in STM32CubeIDE, build (Ctrl+B), then *Run → Debug* to flash over the
-on-board ST-LINK.
+The one project builds several firmwares. Pick one from the arrow next to the hammer
+(*Project → Build Configurations → Set Active*), build (Ctrl+B), then *Run → Debug* to flash over
+the on-board ST-LINK.
+
+| Build configuration | Firmware |
+|---------------------|----------|
+| Debug, Release | the lock |
+| Collect | streams samples and the button for `ml/collect.py` |
+| GestureTest | hold, gesture, release: prints the gesture ID and how long the model took |
+| HwTest | no model: a button click opens the relay for 3 s, and the gyro and button are printed |
+
+Each configuration builds into its own folder (`Debug/`, `Collect/`, ...), so the debug launch
+must point at that folder's `.elf`.

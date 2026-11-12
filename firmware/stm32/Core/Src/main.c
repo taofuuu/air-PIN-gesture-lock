@@ -25,6 +25,7 @@
 #include "button.h"
 #include "gesture.h"
 #include "imu.h"
+#include "tool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,6 +133,9 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   printf("WHO_AM_I = 0x%02X\r\n", imu_init());
+#ifdef TOOL
+  tool_run();  // a bench firmware replaces the lock's loop, see tool.h; never returns
+#endif
   next_sample = HAL_GetTick();
   send_results();  // empty list: shows the board is up and ready
   /* USER CODE END 2 */

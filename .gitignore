@@ -1,6 +1,9 @@
 # ---- STM32CubeIDE / Eclipse build output ----
 Debug/
 Release/
+Collect/
+GestureTest/
+HwTest/
 *.o
 *.d
 *.su

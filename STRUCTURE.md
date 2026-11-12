@@ -4,11 +4,11 @@ Three people, three parts. Each part builds and tests on its own and talks to th
 only through the interfaces at the bottom of this file. Change an interface only after
 all three agree.
 
-| Part | Owner | Branch |
-|------|-------|--------|
-| ML gesture model | taofuuu | `ml-model`, merged to `main` |
-| PIN mapping | TBD | `gesture-pin-entry` |
-| ESP32 + web IoT dashboard | TBD | `esp32-dashboard`, not started |
+| Part | Owner |
+|------|-------|
+| ML gesture model | taofuuu |
+| PIN mapping | 1999-Chin |
+| ESP32 + web IoT dashboard | pedigree-pp |
 
 ## Layout
 
@@ -17,9 +17,13 @@ air-PIN-gesture-lock/
 ├── README.md                 overview, wiring, how to build and flash
 ├── STRUCTURE.md              this file
 ├── GLOSSARY.md               the words we use for the domain
+├── CLAUDE.md                 where AI agents find the issue tracker and these docs
 ├── docs/adr/                 decisions that are hard to undo, and why
+├── docs/agents/              issue tracker, triage labels and domain docs for AI agents
 ├── hardware/
 │   ├── wand.scad             3D-printed wand handle
+│   ├── stl/                  print-ready parts: wand_* from wand.scad, nucleo_* from CAD
+│   ├── measurements/         photos of the module sizes the wand is fitted to
 │   └── wiring.svg            how the sensor and button connect to the Nucleo
 ├── firmware/
 │   ├── stm32/                STM32CubeIDE project, NUCLEO-F411RE          shared
@@ -34,7 +38,8 @@ air-PIN-gesture-lock/
 │   │           ├── button.c  KY-004: hold = gesture, double tap = clear  shared
 │   │           ├── gesture.c runs the trained model on a recording       ML
 │   │           ├── pin.c     gesture sequence -> PIN check               PIN mapping
-│   │           └── link.c    UART messages to and from the ESP32         ESP32
+│   │           ├── link.c    UART messages to and from the ESP32         ESP32
+│   │           └── tool_*.c  bench firmware, one per build configuration (tool.h)
 │   └── esp32/                ESP32 project: Wi-Fi, web server            ESP32
 │       └── data/             dashboard HTML/CSS/JS served by the ESP32   ESP32
 └── ml/                       training on the PC                          ML
@@ -102,14 +107,18 @@ ESP32 uses another UART. Both boards are 3.3 V logic; connect TX to RX, RX to TX
 
 ## Working rules
 
-- Work on your own branch and merge to `main` through a pull request.
-- `ml-collect-fw` and `ml-gesture-fw` are mockup firmware for testing one part on its own.
-  Rebase them onto `main` when it moves; they are never merged into it.
+- Work on a short branch from `main`, named after the change, and merge it through a pull
+  request. Delete the branch once it is merged.
+- Everything lives on `main`. Firmware for testing one part on its own is a `tool_*.c` file with
+  its own build configuration (see `tool.h`), never a branch: Debug and Release build the lock,
+  Collect feeds `ml/collect.py`, GestureTest times the model, HwTest opens the relay on a click.
 - Edit only your own files. Shared files (`main.c`, `imu.c`, `*.ioc`, headers in `Inc/`)
   change in small PRs that the others review.
 - In CubeMX-generated files, write code only between `/* USER CODE BEGIN */` and
   `/* USER CODE END */`; regenerating wipes everything else.
 - Test without the others:
   - ML: train and evaluate on the PC from `ml/data/`.
+  - Firmware logic: `firmware/stm32/test/*.c` run on a PC with gcc; the command is at the top
+    of each file.
   - PIN mapping: feed `pin_add()` fake gesture ids.
   - ESP32: type the line protocol into a USB-serial terminal instead of a real STM32.

@@ -1,11 +1,11 @@
 """Record labelled gestures from the wand over the Nucleo's ST-LINK USB serial.
 
-Needs the data-collection mockup firmware (local branch ml-collect-fw), which prints one line
-per sample at 100 Hz:
+Needs the Collect build of the STM32 firmware (firmware/stm32/Core/Src/tool_collect.c), which
+prints one line per sample at 100 Hz:
 
     ax,ay,az,gx,gy,gz,btn     raw MPU-6050 counts; btn is 1 while the button is held
 
-That line format is private to the mockup and this script. Gestures are asked in shuffled order.
+That line format is private to tool_collect.c and this script. Gestures are asked in shuffled order.
 Each kept recording is saved at once as ml/data/<gesture>/<person>_<YYYYMMDD-HHMMSS-mmm>.csv:
 up to 5 lead-in rows (btn 0) from just before the press, then the gesture rows (btn 1).
 Ctrl+C stops without losing anything already saved.
@@ -55,8 +55,8 @@ def recordings(lines):
                 rows = list(lead_in)
             rows.append(row)
             if len(rows) > LEAD_IN + STUCK_SAMPLES:
-                sys.exit("btn has read 1 for 10 s. If the button isn't held, flip BTN_PRESSED "
-                         "in the mockup firmware's main.c.")
+                sys.exit("btn has read 1 for 10 s. If the button isn't held, check the KY-004 "
+                         "wiring in README.md: + is the middle pin.")
         elif rows is not None:
             yield rows
             rows = None
@@ -81,8 +81,8 @@ def serial_lines(ser):
     while True:
         raw = ser.readline()
         if not raw:
-            sys.exit("No data from the board for 2 s. Is the mockup firmware (branch ml-collect-fw) "
-                     "flashed, and is no other program using the port?")
+            sys.exit("No data from the board for 2 s. Is the Collect build flashed, "
+                     "and is no other program using the port?")
         yield raw.decode("ascii", "replace")
 
 
