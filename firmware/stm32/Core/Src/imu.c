@@ -3,7 +3,7 @@
 extern I2C_HandleTypeDef hi2c1;
 
 #define MPU_ADDR         (0x68 << 1)  // HAL takes the 7-bit address shifted left; AD0 low
-#define I2C_TIMEOUT_MS   100
+#define I2C_TIMEOUT_MS   10           // a 14-byte read at 100 kHz takes ~1.6 ms; stay under one sample period
 #define I2C_SCL_PIN      GPIO_PIN_8   // PB8
 #define I2C_SDA_PIN      GPIO_PIN_9   // PB9
 
@@ -15,9 +15,9 @@ extern I2C_HandleTypeDef hi2c1;
 #define REG_PWR_MGMT_1   0x6B
 #define REG_WHO_AM_I     0x75
 
-static void write_reg(uint8_t reg, uint8_t value)
+static HAL_StatusTypeDef write_reg(uint8_t reg, uint8_t value)
 {
-  HAL_I2C_Mem_Write(&hi2c1, MPU_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MS);
+  return HAL_I2C_Mem_Write(&hi2c1, MPU_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MS);
 }
 
 static void bus_line(uint16_t pin, GPIO_PinState level)
@@ -63,11 +63,13 @@ uint8_t imu_init(void)
   i2c_bus_recover();
   HAL_I2C_Mem_Read(&hi2c1, MPU_ADDR, REG_WHO_AM_I, I2C_MEMADD_SIZE_8BIT, &id, 1, I2C_TIMEOUT_MS);
 
-  write_reg(REG_PWR_MGMT_1, 0x01);    // clear SLEEP (set at power-up), clock from gyro X PLL
-  write_reg(REG_CONFIG, 0x03);        // DLPF ~44 Hz, which makes the internal rate 1 kHz
-  write_reg(REG_SMPLRT_DIV, 9);       // 1 kHz / (1 + 9) = 100 Hz
-  write_reg(REG_GYRO_CONFIG, 0x08);   // FS_SEL = 1: +-500 deg/s
-  write_reg(REG_ACCEL_CONFIG, 0x08);  // AFS_SEL = 1: +-4 g
+  // A lost write leaves that register at its power-up default (e.g. +-2 g instead of +-4 g),
+  // which would silently record at the wrong scale, so treat any failure as "no sensor".
+  if (write_reg(REG_PWR_MGMT_1, 0x01) != HAL_OK) return 0;    // clear SLEEP, clock from gyro X PLL
+  if (write_reg(REG_CONFIG, 0x03) != HAL_OK) return 0;        // DLPF ~44 Hz, internal rate 1 kHz
+  if (write_reg(REG_SMPLRT_DIV, 9) != HAL_OK) return 0;       // 1 kHz / (1 + 9) = 100 Hz
+  if (write_reg(REG_GYRO_CONFIG, 0x08) != HAL_OK) return 0;   // FS_SEL = 1: +-500 deg/s
+  if (write_reg(REG_ACCEL_CONFIG, 0x08) != HAL_OK) return 0;  // AFS_SEL = 1: +-4 g
   return id;
 }
 
