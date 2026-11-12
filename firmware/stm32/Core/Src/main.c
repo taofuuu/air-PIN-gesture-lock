@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "button.h"
+#include "gesture.h"
 #include "imu.h"
 /* USER CODE END Includes */
 
@@ -32,12 +34,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-// shortcut: this 10 ms loop runs off the STM32 clock, the MPU-6050's 100 Hz off its own
-// oscillator. They drift ~1%, so about 1 row in 70 repeats the previous sample (1.41% in the
-// recorded ml/data). Fine for the classifier; switch to the data-ready flag if anyone
-// integrates the gyro.
 #define SAMPLE_PERIOD_MS 10
 #define MAX_READ_FAILS   10  // consecutive failed reads before re-running imu_init()
+#define RESULT_SLOTS     4   // gestures kept before the list is sent one last time and cleared
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,7 +50,10 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+static imu_sample_t recording[GESTURE_MODEL_SAMPLES];  // one button hold
+static size_t recorded;
+static int results[RESULT_SLOTS];  // gesture IDs, -1 = unsure
+static int result_count;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,6 +71,29 @@ int __io_putchar(int ch)
 {
   HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
   return ch;
+}
+
+/* Sends every slot, e.g. "RESULTS 0 3 -1 _" with _ for an empty slot. */
+static void send_results(void)
+{
+  printf("RESULTS");
+  for (int i = 0; i < RESULT_SLOTS; i++)
+  {
+    if (i < result_count)
+      printf(" %d", results[i]);
+    else
+      printf(" _");
+  }
+  printf("\r\n");
+}
+
+/* Classifies the recording just finished, stores the result and sends the list. */
+static void finish_gesture(void)
+{
+  results[result_count++] = gesture_classify(recording, recorded);
+  send_results();
+  if (result_count == RESULT_SLOTS)
+    result_count = 0;
 }
 /* USER CODE END 0 */
 
@@ -108,6 +133,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("WHO_AM_I = 0x%02X\r\n", imu_init());
   next_sample = HAL_GetTick();
+  send_results();  // empty list: shows the board is up and ready
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,19 +143,40 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // KY-004 S is pulled up and reads low while pressed
+    int pressed = HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin) == GPIO_PIN_RESET;
+    switch (button_update(pressed, HAL_GetTick()))
+    {
+    case BUTTON_PRESSED:
+      recorded = 0;
+      next_sample = HAL_GetTick();  // first sample now, not at the old schedule
+      break;
+    case BUTTON_GESTURE:
+      finish_gesture();
+      break;
+    case BUTTON_DOUBLE_TAP:
+      result_count = 0;
+      printf("RESET\r\n");
+      break;
+    case BUTTON_NONE:
+      break;
+    }
+
     // Signed difference keeps working when the tick counter wraps around
-    if ((int32_t)(HAL_GetTick() - next_sample) >= 0)
+    if (button_held() && (int32_t)(HAL_GetTick() - next_sample) >= 0)
     {
       next_sample += SAMPLE_PERIOD_MS;
+      // Holds longer than the model's 2 s window keep only their start
       if (imu_read(&s) == 0)
       {
-        printf("%d,%d,%d,%d,%d,%d\r\n", s.ax, s.ay, s.az, s.gx, s.gy, s.gz);
+        if (recorded < GESTURE_MODEL_SAMPLES)
+          recording[recorded++] = s;
         read_fails = 0;
       }
       else if (++read_fails >= MAX_READ_FAILS)
       {
         // The bus can stick at runtime too (a jumper pops out and back). imu_init() frees it
-        // and reapplies the settings. collect.py drops non-numeric lines, so these are safe.
+        // and reapplies the settings. Only RESULTS lines are protocol; the rest is noise.
         read_fails = 0;
         printf("imu reset, WHO_AM_I = 0x%02X\r\n", imu_init());
         next_sample = HAL_GetTick();  // recovery takes ~50-90 ms; don't burst to catch up
@@ -285,6 +332,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
