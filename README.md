@@ -24,7 +24,7 @@ Pins are fixed in the CubeMX `.ioc`; keep this table in sync with it.
 |------|-----|------------|
 | MPU-6050 | SDA / SCL | D14 (PB9) / D15 (PB8), I2C1 |
 | MPU-6050 | VCC / GND | 3V3 / GND |
-| KY-004 | S | D4 (PB5), GPIO input with pull-up |
+| KY-004 | S | D4 (PB5), GPIO input with pull-up, low while pressed |
 | KY-004 | + (middle pin) / - | 3V3 / GND |
 | KY-019 | S | TBD (GPIO output) |
 | KY-019 | + / - | 5V / GND |

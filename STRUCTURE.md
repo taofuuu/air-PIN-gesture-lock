@@ -31,6 +31,7 @@ air-PIN-gesture-lock/
 │   │       └── Src/
 │   │           ├── main.c    init, button, relay, calls the modules      shared
 │   │           ├── imu.c     MPU-6050 driver                             shared
+│   │           ├── button.c  KY-004: hold = gesture, double tap = clear  shared
 │   │           ├── gesture.c runs the trained model on a recording       ML
 │   │           ├── pin.c     gesture sequence -> PIN check               PIN mapping
 │   │           └── link.c    UART messages to and from the ESP32         ESP32
