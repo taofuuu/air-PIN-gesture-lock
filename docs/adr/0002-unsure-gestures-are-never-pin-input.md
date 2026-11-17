@@ -11,9 +11,9 @@ samples or a model that failed to init, a wiggle that `one_movement()` will not 
 class below the threshold. All three mean *I could not read that*. `-1` is an abstain, not another
 gesture. This ADR says what handling it means for `pin.c` and `main.c`.
 
-1. **`-1` is never stored.** While recording a PIN, reject the gesture, ask for it again and store
+1. **`-1` is never stored.** During PIN setup, reject the gesture, ask for it again and store
    nothing, so a stored PIN holds only IDs the model actually returned. After three unsure in a
-   row, abandon enrolment and keep the old PIN; a half-written PIN in flash locks everyone out.
+   row, abandon PIN setup and keep the old PIN; a half-written PIN in flash locks everyone out.
 2. **While entering, `-1` is neither a digit nor a wrong digit.** The slot stays unfilled and the
    user is asked to repeat, with feedback distinct from a wrong PIN. The test is `gesture < 0`, per
    rule 1 of ADR 0001, and it runs before any comparison with the stored digit.
@@ -47,13 +47,15 @@ if (unsure >= 5) printf("STUCK\r\n");    // run of unsure = broken sensor, not a
 
 ## Consequences
 
-- Every symbol in a stored PIN is one the model is confident about, so a PIN that enrols can be
-  entered again, and survives a retrain or a threshold change.
+- Every symbol in a stored PIN is one the model is confident about, so a PIN accepted at PIN setup
+  can be entered again, and survives a retrain or a threshold change.
 - A sensor miss costs one repeated gesture instead of the whole attempt. This matters because the
   threshold is tuned for a low false-accept rate, which buys a non-trivial false-reject rate.
 - Guesses for a four-gesture PIN stay at 4^4. Nobody can choose to produce `-1`, and a gesture the
   model is confident about always fills a slot, so repeating never widens an attacker's budget.
   "Unsure" is decided before any comparison, so the prompt reveals nothing about the stored PIN.
+  With enrolled gestures the 4 becomes the size of the gesture set: see
+  [ADR 0003](0003-gesture-set-larger-than-the-pin.md).
 - Rule 4 is load-bearing, not a nicety: without it an abandoned entry parks a partly filled buffer,
   and the next person at the door needs only the rest of the gestures. Two correct digits left
   behind turn 4^4 guesses into 4^2.

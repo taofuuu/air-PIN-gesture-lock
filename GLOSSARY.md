@@ -38,9 +38,19 @@ _Avoid_: straightening, levelling
 ### Gestures
 
 **Gesture**:
-A named kind of motion the lock can recognise, such as UP or a clockwise circle. One gesture is
-performed per button press.
-_Avoid_: move, motion, symbol
+The path the wand's tip draws during one button press, starting from the starting pose, as if
+drawing on a wall with a laser pointer. Its direction, orientation and proportions are part of it;
+its speed, its overall size, twisting the wand and moving the whole arm are not.
+_Avoid_: move, motion, symbol, shape
+
+**Gesture set**:
+The gestures one lock has been taught. The PIN is picked from it, and it holds more gestures than
+the PIN uses.
+_Avoid_: vocabulary, library, dictionary
+
+**Enrolment**:
+Teaching the lock one new gesture by performing it several times, which adds it to the gesture set.
+_Avoid_: training, registration, recording a gesture
 
 **Stroke**:
 A gesture that tilts the tip in one straight direction from the starting pose and stops there.
@@ -60,8 +70,13 @@ The outcome when the lock cannot tell which gesture was performed. It matches no
 _Avoid_: unknown, other, none
 
 **PIN**:
-The secret, ordered sequence of gestures that opens the lock.
+The secret, ordered sequence of gestures from the gesture set that opens the lock. Anyone who
+knows it and performs it opens the lock: it says nothing about who the person is.
 _Avoid_: code, password, combination
+
+**PIN setup**:
+Choosing the PIN from the gesture set.
+_Avoid_: PIN enrolment, recording a PIN
 
 ### Motion data
 
@@ -90,3 +105,8 @@ _Avoid_: noise, negative, other
 **Twisted recording**:
 A recording of a real gesture made with the wand twisted. It exists only to check gravity
 correction.
+
+**Enrolment recording**:
+A recording made during enrolment. It belongs to the lock's owner and is never used to train the
+network.
+_Avoid_: enrolment sample
