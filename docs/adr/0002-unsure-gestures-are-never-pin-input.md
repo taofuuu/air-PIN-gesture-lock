@@ -54,8 +54,8 @@ if (unsure >= 5) printf("STUCK\r\n");    // run of unsure = broken sensor, not a
 - Guesses for a four-gesture PIN stay at 4^4. Nobody can choose to produce `-1`, and a gesture the
   model is confident about always fills a slot, so repeating never widens an attacker's budget.
   "Unsure" is decided before any comparison, so the prompt reveals nothing about the stored PIN.
-  With enrolled gestures the 4 becomes the size of the gesture set: see
-  [ADR 0003](0003-gesture-set-larger-than-the-pin.md).
+  Secret gestures replace the PIN altogether: see
+  [ADR 0006](0006-one-secret-gesture-per-user.md).
 - Rule 4 is load-bearing, not a nicety: without it an abandoned entry parks a partly filled buffer,
   and the next person at the door needs only the rest of the gestures. Two correct digits left
   behind turn 4^4 guesses into 4^2.

@@ -43,13 +43,13 @@ drawing on a wall with a laser pointer. Its direction, orientation and proportio
 its speed, its overall size, twisting the wand and moving the whole arm are not.
 _Avoid_: move, motion, symbol, shape
 
-**Gesture set**:
-The gestures one lock has been taught. The PIN is picked from it, and it holds more gestures than
-the PIN uses.
-_Avoid_: vocabulary, library, dictionary
+**Secret gesture**:
+The one gesture a user enrols to open the lock. Each user has their own, and performing any user's
+secret gesture opens the lock, whoever performs it.
+_Avoid_: PIN, password, passcode, signature
 
 **Enrolment**:
-Teaching the lock one new gesture by performing it several times, which adds it to the gesture set.
+Teaching the lock a user's secret gesture by performing it several times.
 _Avoid_: training, registration, recording a gesture
 
 **Stroke**:
@@ -66,16 +66,22 @@ Bringing the tip back to the starting pose after a stroke. It is never part of a
 happens after the button is released.
 
 **Unsure**:
-The outcome when the lock cannot tell which gesture was performed. It matches no gesture.
+The outcome when the lock can't read a recording as a gesture, such as an accidental press, or
+can't tell which stroke it was. The person is asked again, and it is never a failed attempt.
 _Avoid_: unknown, other, none
 
+**No match**:
+The outcome when a gesture is readable but not close enough to any secret gesture. It is a failed
+attempt.
+_Avoid_: wrong gesture, rejected
+
 **PIN**:
-The secret, ordered sequence of gestures from the gesture set that opens the lock. Anyone who
-knows it and performs it opens the lock: it says nothing about who the person is.
+The secret, ordered sequence of strokes that opens the four-stroke lock. It is the baseline until
+secret gestures replace it.
 _Avoid_: code, password, combination
 
 **PIN setup**:
-Choosing the PIN from the gesture set.
+Choosing the PIN.
 _Avoid_: PIN enrolment, recording a PIN
 
 ### Motion data
@@ -107,6 +113,6 @@ A recording of a real gesture made with the wand twisted. It exists only to chec
 correction.
 
 **Enrolment recording**:
-A recording made during enrolment. It belongs to the lock's owner and is never used to train the
-network.
+A recording made during enrolment. It belongs to the user who made it and is never used to train
+the network.
 _Avoid_: enrolment sample

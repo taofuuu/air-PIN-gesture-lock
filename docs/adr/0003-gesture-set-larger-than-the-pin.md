@@ -1,5 +1,5 @@
 ---
-Status: accepted
+Status: superseded by ADR 0006
 ---
 
 # The lock is taught a gesture set larger than the PIN
